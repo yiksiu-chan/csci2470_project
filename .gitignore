@@ -1,0 +1,12 @@
+# Cache folders
+__pycache__
+.ipynb_checkpoints
+.slurm_logs
+
+# Virtual environment
+.venv
+
+# Data files
+
+# Bash scripts
+run_inference.sh
