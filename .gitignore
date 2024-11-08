@@ -2,11 +2,18 @@
 __pycache__
 .ipynb_checkpoints
 .slurm_logs
+.cache
+wandb
 
 # Virtual environment
-.venv
+venv
+
+# Model checkpoints
+checkpoints
+checkpoints_v2
 
 # Data files
+data 
 
 # Bash scripts
-run_inference.sh
+.sh

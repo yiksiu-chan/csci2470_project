@@ -221,3 +221,27 @@ def truncate_strings(strings, tokenizer, max_tokens):
             truncated_strings.append(string)
     
     return truncated_strings
+
+
+#########################
+# REGEX FOR TRANSLATION #
+#########################
+def extract_query(s):
+    """
+    Extracts the content between \n user\n and \n assistant\n, ignoring case.
+    """
+    query = re.search(r'\n user\n(.*?)\n assistant\n', s, re.IGNORECASE | re.DOTALL)
+    if query:
+        return query.group(1).strip()
+    else: 
+        raise ValueError()
+
+def extract_response(s):
+    """
+    Extracts everything after \n assistant\n, ignoring case.
+    """
+    response = re.search(r'\n assistant\n(.*)', s, re.IGNORECASE | re.DOTALL)
+    if response:
+        return response.group(1).strip()
+    else:
+        raise ValueError()
