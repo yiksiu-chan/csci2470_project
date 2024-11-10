@@ -1,7 +1,7 @@
 # Cache folders
 __pycache__
 .ipynb_checkpoints
-.slurm_logs
+.logs
 .cache
 wandb
 
@@ -11,6 +11,7 @@ venv
 # Model checkpoints
 checkpoints
 checkpoints_v2
+model
 
 # Data files
 data 

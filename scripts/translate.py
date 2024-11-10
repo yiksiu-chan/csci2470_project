@@ -7,8 +7,8 @@ from utils import *
 
 translator = get_translator("azure_translator")
 
-input_folder = "results/xsafety/"
-output_folder = "results/xsafety/translated_responses/"
+input_folder = "results/dpo-2/raw_responses/"
+output_folder = "results/dpo-2/translated_responses/"
 
 # If queries are the same in each language
 # queries_raw = json.load(open("results/raw_responses/responses_en.json", "r"))

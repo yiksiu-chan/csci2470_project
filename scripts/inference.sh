@@ -14,10 +14,11 @@ source ../venv/bin/activate
 
 # File paths
 DATA_DIR="../data/xsafety/"
-SAVE_DIR="../results/dpo/"
+SAVE_DIR="../results/dpo-2/"
 
 # Model parameters
 MODEL_ID="utter-project/EuroLLM-1.7B-Instruct"
+# "yiksiu/EuroLLM-1.7B-DPO-v2"
 MAX_TOKENS=256
 TEMPERATURE=0.1
 TOP_P=0

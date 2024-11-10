@@ -6,7 +6,7 @@ from tqdm import tqdm
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
 def load_model_and_tokenizer(model_id):
-    tokenizer = AutoTokenizer.from_pretrained(model_id)
+    tokenizer = AutoTokenizer.from_pretrained("utter-project/EuroLLM-1.7B-Instruct")
     model = AutoModelForCausalLM.from_pretrained(model_id)
     return model, tokenizer
 
@@ -38,25 +38,28 @@ def process_files(folder_path, save_dir, model, tokenizer, max_tokens=256, file_
             language_code = filename[-6:-4]  # Extract language code
             file_path = os.path.join(folder_path, filename)
             save_path = os.path.join(save_dir, f"responses_{language_code}.json")
-            
-            # Load queries from file
-            with open(file_path, 'r', encoding='utf-8') as file:
-                queries = [line.strip() for line in file]
+        else:
+            file_path = os.path.join(folder_path, filename)
+            save_path = os.path.join(save_dir, f"responses_{filename}.json")
 
-                queries = queries[:5]
+        # Load queries from file
+        with open(file_path, 'r', encoding='utf-8') as file:
+            queries = [line.strip() for line in file]
 
-            qa_pairs = load_results(save_path) or {}
-            
-            if not qa_pairs:  # Only process if responses are not already saved
-                for query in tqdm(queries, ascii=True, leave=False):
-                    prompt = generate_prompt(query)
-                    response = run_inference(prompt, model, tokenizer, max_tokens=max_tokens)
-                    print(response)
-                    qa_pairs[query] = response
+            # queries = queries[:5]
 
-                save_results(qa_pairs, save_path)
+        qa_pairs = load_results(save_path) or {}
+        
+        if not qa_pairs:  # Only process if responses are not already saved
+            for query in tqdm(queries, ascii=True, leave=False):
+                prompt = generate_prompt(query)
+                response = run_inference(prompt, model, tokenizer, max_tokens=max_tokens)
+                print(response)
+                qa_pairs[query] = response
 
-            result[language_code] = [{"query": query, "response": qa_pairs.get(query, "")} for query in queries]
+            save_results(qa_pairs, save_path)
+
+        result[language_code] = [{"query": query, "response": qa_pairs.get(query, "")} for query in queries]
 
     return result
 
