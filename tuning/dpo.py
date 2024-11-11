@@ -30,8 +30,8 @@ def get_args():
     parser.add_argument("--epochs", type=int, default=5, help="Number of training epochs")
     parser.add_argument("--batch_size", type=int, default=4, help="Batch size for training")
     parser.add_argument("--learning_rate", type=float, default=1e-6, help="Learning rate for optimizer")
-    parser.add_argument("--log_interval", type=int, default=100, help="Steps between logging training status")
-    parser.add_argument("--eval_interval", type=int, default=500, help="Steps between evaluation/checkpoints")
+    parser.add_argument("--log_interval", type=int, default=1000, help="Steps between logging training status")
+    parser.add_argument("--eval_interval", type=int, default=5000, help="Steps between evaluation/checkpoints")
     parser.add_argument("--use_wandb", action="store_true", help="Log metrics to Weights & Biases")
     parser.add_argument("--checkpoint_dir", type=str, default="checkpoints", help="Directory to save checkpoints")
     parser.add_argument("--dataset_name", type=str, default="PKU-Alignment/PKU-SafeRLHF", help="Dataset name from Hugging Face Datasets library")
@@ -57,9 +57,7 @@ def get_safety_pairwise_data(data_file) -> Dataset:
     # with open(data_file, "r") as f:
     #     data = json.load(f)
 
-    data = load_dataset("PKU-Alignment/PKU-SafeRLHF", name='default')
-    data = data["train"]
-
+    data = load_dataset("PKU-Alignment/PKU-SafeRLHF", name='default')["train"]
     processed_data = []
 
     # Process each sample based on the given criteria
@@ -67,20 +65,21 @@ def get_safety_pairwise_data(data_file) -> Dataset:
         prompt = sample["prompt"]
 
         # Selected categories
-        categories = (sample["response_0_harm_category"]["Physical Harm"] 
-                        or sample["response_1_harm_category"]["Physical Harm"] 
-                        or sample["response_0_harm_category"]["Insulting Behavior"] 
-                        or sample["response_1_harm_category"]["Insulting Behavior"] 
-                        or sample["response_0_harm_category"]["Discriminatory Behavior"] 
-                        or sample["response_1_harm_category"]["Discriminatory Behavior"] 
-                        or sample["response_0_harm_category"]["Violence"] 
-                        or sample["response_1_harm_category"]["Violence"] 
-                        or sample["response_0_harm_category"]["Psychological Harm"] 
-                        or sample["response_1_harm_category"]["Psychological Harm"])
+        # categories = (sample["response_0_harm_category"]["Physical Harm"] 
+        #                 or sample["response_1_harm_category"]["Physical Harm"] 
+        #                 or sample["response_0_harm_category"]["Insulting Behavior"] 
+        #                 or sample["response_1_harm_category"]["Insulting Behavior"] 
+        #                 or sample["response_0_harm_category"]["Discriminatory Behavior"] 
+        #                 or sample["response_1_harm_category"]["Discriminatory Behavior"] 
+        #                 or sample["response_0_harm_category"]["Violence"] 
+        #                 or sample["response_1_harm_category"]["Violence"] 
+        #                 or sample["response_0_harm_category"]["Psychological Harm"] 
+        #                 or sample["response_1_harm_category"]["Psychological Harm"])
 
         if sample["is_response_0_safe"] == True and sample["is_response_1_safe"] == True:
             pass 
-        elif categories: 
+        # elif categories: 
+        else: 
             if sample["is_response_0_safe"] == False and sample["is_response_1_safe"] == True:
                 rejected = sample["response_0"]
             elif sample["is_response_0_safe"] == True and sample["is_response_1_safe"] == False:
@@ -97,8 +96,8 @@ def get_safety_pairwise_data(data_file) -> Dataset:
                 "chosen": chosen,
                 "rejected": rejected
             })
-        else:
-            pass
+        # else:
+        #     pass
 
     print(f"Size of finetuning dataset: {len(processed_data)}")
     dataset = Dataset.from_pandas(pd.DataFrame(processed_data))
@@ -124,7 +123,6 @@ if __name__ == "__main__":
         logging_steps=args.log_interval,
         save_steps=args.eval_interval,
         save_total_limit=5,
-        # report_to="wandb" if args.use_wandb else None
     )
 
     # Initialize DPO Trainer
@@ -147,7 +145,7 @@ if __name__ == "__main__":
     # Train the model
     dpo_trainer.train()
 
-    dpo_trainer.save_model("model/")
+    dpo_trainer.save_pretrained("model_dpo_v3/")
 
-    model = AutoModelForCausalLM.from_pretrained("model/")
-    model.push_to_hub("yiksiu/EuroLLM-1.7B-DPO-v2")
+    model = AutoModelForCausalLM.from_pretrained("model_dpo_v3/")
+    model.push_to_hub("yiksiu/EuroLLM-1.7B-DPO-v3")

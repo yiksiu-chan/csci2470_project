@@ -12,8 +12,8 @@
 
 
 USE_WANDB="--use_wandb"
-CHECKPOINT_DIR="checkpoints_v2/"
-export CUDA_VISIBLE_DEVICES=0,1
+CHECKPOINT_DIR="checkpoints_v3/"
+# export CUDA_VISIBLE_DEVICES=0,1
 
 source ../venv/bin/activate
 

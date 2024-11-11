@@ -1,7 +1,7 @@
 # Cache folders
 __pycache__
 .ipynb_checkpoints
-.logs
+.log
 .cache
 wandb
 
@@ -11,7 +11,9 @@ venv
 # Model checkpoints
 checkpoints
 checkpoints_v2
-model
+checkpoints_v3
+model_dpo_v2
+model_dpo_v3
 
 # Data files
 data 
