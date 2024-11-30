@@ -6,7 +6,7 @@ from tqdm import tqdm
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
 def load_model_and_tokenizer(model_id):
-    tokenizer = AutoTokenizer.from_pretrained("utter-project/EuroLLM-1.7B-Instruct")
+    tokenizer = AutoTokenizer.from_pretrained(model_id) # "utter-project/EuroLLM-1.7B-Instruct"
     model = AutoModelForCausalLM.from_pretrained(model_id)
     return model, tokenizer
 

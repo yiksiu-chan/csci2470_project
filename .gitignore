@@ -4,6 +4,7 @@ __pycache__
 .log
 .cache
 wandb
+slurm
 
 # Virtual environment
 venv
@@ -20,3 +21,6 @@ data
 
 # Bash scripts
 .sh
+
+# Login credentials
+google_credentials.json

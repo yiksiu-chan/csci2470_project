@@ -30,8 +30,8 @@ def get_args():
     parser.add_argument("--epochs", type=int, default=5, help="Number of training epochs")
     parser.add_argument("--batch_size", type=int, default=4, help="Batch size for training")
     parser.add_argument("--learning_rate", type=float, default=1e-6, help="Learning rate for optimizer")
-    parser.add_argument("--log_interval", type=int, default=1000, help="Steps between logging training status")
-    parser.add_argument("--eval_interval", type=int, default=5000, help="Steps between evaluation/checkpoints")
+    parser.add_argument("--log_interval", type=int, default=100, help="Steps between logging training status")
+    parser.add_argument("--eval_interval", type=int, default=500, help="Steps between evaluation/checkpoints")
     parser.add_argument("--use_wandb", action="store_true", help="Log metrics to Weights & Biases")
     parser.add_argument("--checkpoint_dir", type=str, default="checkpoints", help="Directory to save checkpoints")
     parser.add_argument("--dataset_name", type=str, default="PKU-Alignment/PKU-SafeRLHF", help="Dataset name from Hugging Face Datasets library")
@@ -82,14 +82,17 @@ def get_safety_pairwise_data(data_file) -> Dataset:
         else: 
             if sample["is_response_0_safe"] == False and sample["is_response_1_safe"] == True:
                 rejected = sample["response_0"]
+                chosen = sample["response_1"]
             elif sample["is_response_0_safe"] == True and sample["is_response_1_safe"] == False:
                 rejected = sample["response_1"]
+                chosen = sample["response_0"]
             else:
                 # If both are unsafe, choose based on severity level
                 rejected = sample["response_0"] if sample["response_0_severity_level"] > sample["response_1_severity_level"] else sample["response_1"]
-
+                chosen = "Sorry, but I cannot assist with this request."
+        
             # Define the chosen response for all cases
-            chosen = "Sorry, but I cannot assist with this request."
+            # chosen = "Sorry, but I cannot assist with this request."
             
             processed_data.append({
                 "prompt": prompt,
@@ -145,7 +148,7 @@ if __name__ == "__main__":
     # Train the model
     dpo_trainer.train()
 
-    dpo_trainer.save_pretrained("model_dpo_v3/")
+    dpo_trainer.save_pretrained("model_dpo_v4/")
 
-    model = AutoModelForCausalLM.from_pretrained("model_dpo_v3/")
-    model.push_to_hub("yiksiu/EuroLLM-1.7B-DPO-v3")
+    model = AutoModelForCausalLM.from_pretrained("model_dpo_v4/")
+    model.push_to_hub("yiksiu/EuroLLM-1.7B-DPO-v4")
