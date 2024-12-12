@@ -55,7 +55,7 @@ cd csci2470_project
 cd tuning
 sbatch dpo.sh
 ```
-### 3. Evaluate models. 
+### 3. Evaluate Models
 ```bash
 sbatch evaluate.sh
 sbatch evaluate_hellaswag.sh
