@@ -47,7 +47,7 @@ This repository contains the official implementation of our final project titled
 ### 1. Clone the Repository
 ```bash
 git clone https://github.com/yiksiu-chan/csci2470_project.git
-cd yourrepo
+cd csci2470_project
 ```
 
 ### 2. DPO Tuning
