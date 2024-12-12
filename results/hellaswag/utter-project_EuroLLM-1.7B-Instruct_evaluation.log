@@ -1,0 +1,34 @@
+Loaded 8976 examples for language: fr
+Loaded 9007 examples for language: es
+Loaded 9609 examples for language: en
+Loaded 8925 examples for language: ru
+Loaded 9005 examples for language: de
+Total common 'ind's across all languages: 8449
+Selected 5000 common 'ind's for evaluation.
+Language fr: 5000 samples prepared for evaluation.
+Language es: 5000 samples prepared for evaluation.
+Language en: 5000 samples prepared for evaluation.
+Language ru: 5000 samples prepared for evaluation.
+Language de: 5000 samples prepared for evaluation.
+
+Evaluating language: fr with 5000 samples
+Accuracy for fr: 0.3786
+
+Evaluating language: es with 5000 samples
+Accuracy for es: 0.3880
+
+Evaluating language: en with 5000 samples
+Accuracy for en: 0.4316
+
+Evaluating language: ru with 5000 samples
+Accuracy for ru: 0.3428
+
+Evaluating language: de with 5000 samples
+Accuracy for de: 0.3700
+
+Final Results:
+Language: fr | Accuracy: 0.3786
+Language: es | Accuracy: 0.3880
+Language: en | Accuracy: 0.4316
+Language: ru | Accuracy: 0.3428
+Language: de | Accuracy: 0.3700

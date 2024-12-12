@@ -11,6 +11,7 @@ from trainer import DPOTuningTrainer
 
 import pandas as pd
 from datasets import Dataset
+from itertools import product
 
 
 def set_seed(seed):
@@ -39,7 +40,7 @@ def get_args():
 
     return parser.parse_args()
 
-
+# TODO: clean the data loading code, move it to a new class
 def get_safety_pairwise_data(data_file) -> Dataset:
     """
     Load a safety-paired dataset from a single JSON file, filter, and format it.
@@ -58,52 +59,82 @@ def get_safety_pairwise_data(data_file) -> Dataset:
     #     data = json.load(f)
 
     data = load_dataset("PKU-Alignment/PKU-SafeRLHF", name='default')["train"]
-    processed_data = []
 
-    # Process each sample based on the given criteria
-    for sample in data:
-        prompt = sample["prompt"]
+    # # Process each sample based on the given criteria
+    # for sample in data:
+    #     prompt = sample["prompt"]
 
-        # Selected categories
-        # categories = (sample["response_0_harm_category"]["Physical Harm"] 
-        #                 or sample["response_1_harm_category"]["Physical Harm"] 
-        #                 or sample["response_0_harm_category"]["Insulting Behavior"] 
-        #                 or sample["response_1_harm_category"]["Insulting Behavior"] 
-        #                 or sample["response_0_harm_category"]["Discriminatory Behavior"] 
-        #                 or sample["response_1_harm_category"]["Discriminatory Behavior"] 
-        #                 or sample["response_0_harm_category"]["Violence"] 
-        #                 or sample["response_1_harm_category"]["Violence"] 
-        #                 or sample["response_0_harm_category"]["Psychological Harm"] 
-        #                 or sample["response_1_harm_category"]["Psychological Harm"])
+    #     # Selected categories
+    #     # categories = (sample["response_0_harm_category"]["Physical Harm"] 
+    #     #                 or sample["response_1_harm_category"]["Physical Harm"] 
+    #     #                 or sample["response_0_harm_category"]["Insulting Behavior"] 
+    #     #                 or sample["response_1_harm_category"]["Insulting Behavior"] 
+    #     #                 or sample["response_0_harm_category"]["Discriminatory Behavior"] 
+    #     #                 or sample["response_1_harm_category"]["Discriminatory Behavior"] 
+    #     #                 or sample["response_0_harm_category"]["Violence"] 
+    #     #                 or sample["response_1_harm_category"]["Violence"] 
+    #     #                 or sample["response_0_harm_category"]["Psychological Harm"] 
+    #     #                 or sample["response_1_harm_category"]["Psychological Harm"])
 
-        if sample["is_response_0_safe"] == True and sample["is_response_1_safe"] == True:
-            pass 
-        # elif categories: 
-        else: 
-            if sample["is_response_0_safe"] == False and sample["is_response_1_safe"] == True:
-                rejected = sample["response_0"]
-                chosen = sample["response_1"]
-            elif sample["is_response_0_safe"] == True and sample["is_response_1_safe"] == False:
-                rejected = sample["response_1"]
-                chosen = sample["response_0"]
-            else:
-                # If both are unsafe, choose based on severity level
-                rejected = sample["response_0"] if sample["response_0_severity_level"] > sample["response_1_severity_level"] else sample["response_1"]
-                chosen = "Sorry, but I cannot assist with this request."
+    #     if sample["is_response_0_safe"] == True and sample["is_response_1_safe"] == True:
+    #         pass 
+    #     # elif categories: 
+    #     else: 
+    #         if sample["is_response_0_safe"] == False and sample["is_response_1_safe"] == True:
+    #             rejected = sample["response_0"]
+    #             chosen = sample["response_1"]
+    #         elif sample["is_response_0_safe"] == True and sample["is_response_1_safe"] == False:
+    #             rejected = sample["response_1"]
+    #             chosen = sample["response_0"]
+    #         else:
+    #             # If both are unsafe, choose based on severity level
+    #             rejected = sample["response_0"] if sample["response_0_severity_level"] > sample["response_1_severity_level"] else sample["response_1"]
+    #             chosen = "Sorry, but I cannot assist with this request."
         
-            # Define the chosen response for all cases
-            # chosen = "Sorry, but I cannot assist with this request."
+    #         # Define the chosen response for all cases
+    #         # chosen = "Sorry, but I cannot assist with this request."
             
-            processed_data.append({
-                "prompt": prompt,
-                "chosen": chosen,
-                "rejected": rejected
-            })
-        # else:
-        #     pass
+    #         processed_data.append({
+    #             "prompt": prompt,
+    #             "chosen": chosen,
+    #             "rejected": rejected
+    #         })
+    #     # else:
+    #     #     pass
+    
+    # helper function to process training dat =a
+    def process_safety_data(df):
+        processed_data = []
+        
+        grouped = df.groupby('prompt')
+        
+        for prompt, group in grouped:
+            safe_responses = set()
+            unsafe_responses = set()
+            
+            for _, row in group.iterrows():
+                if row['is_response_0_safe']:
+                    safe_responses.add(row['response_0'])
+                else:
+                    unsafe_responses.add(row['response_0'])
+                    
+                if row['is_response_1_safe']:
+                    safe_responses.add(row['response_1'])
+                else:
+                    unsafe_responses.add(row['response_1'])
+            
+            # create preference pairs (safe, unsafe)
+            preference_pairs = product(safe_responses, unsafe_responses)
+            for safe, unsafe in preference_pairs:
+                processed_data.append({'prompt': prompt, 'chosen': safe, 'rejected': unsafe})
+        
+        return pd.DataFrame(processed_data)
+
+    df = pd.DataFrame(data)
+    processed_data = process_safety_data(df)
 
     print(f"Size of finetuning dataset: {len(processed_data)}")
-    dataset = Dataset.from_pandas(pd.DataFrame(processed_data))
+    dataset = Dataset.from_pandas(processed_data)
 
     return dataset
 

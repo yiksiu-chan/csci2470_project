@@ -5,7 +5,7 @@ import json
 import multiprocessing
 
 from tqdm import tqdm
-from langdetect import detect
+# from langdetect import detect
 from azure.ai.translation.text import TextTranslationClient
 from azure.core.credentials import AzureKeyCredential
 from azure.core.exceptions import HttpResponseError
@@ -107,13 +107,13 @@ class AzureTranslatorWrapper:
                         
             raise
 
-    def is_english(self, sentence):
-        """Detect if the sentence is in English."""
-        try:
-            source_lang = detect(sentence)
-        except:
-            source_lang = "error"
-        return source_lang == "en"
+    # def is_english(self, sentence):
+    #     """Detect if the sentence is in English."""
+    #     try:
+    #         source_lang = detect(sentence)
+    #     except:
+    #         source_lang = "error"
+    #     return source_lang == "en"
 
     def perform_translation(self, sentence, target):
         """Translate the sentence to the target language."""

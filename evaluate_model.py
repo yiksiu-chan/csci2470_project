@@ -74,6 +74,7 @@ def load_results(file_path):
             return json.load(f)
     return {}
 
+# Step 1: generate multilingual responses 
 def generate_responses(folder_path, save_dir, model, tokenizer, max_tokens=256, batch_size=8):
     for lang_folder in os.listdir(folder_path):
         lang_folder_path = os.path.join(folder_path, lang_folder)
@@ -90,14 +91,13 @@ def generate_responses(folder_path, save_dir, model, tokenizer, max_tokens=256, 
             csv_file_path = os.path.join(lang_folder_path, csv_filename)
             save_path = os.path.join(save_dir, f"{lang_folder}_{category_name}.json")
 
-            # Load or initialize results
+            # initialize qa pairs, or load processed ones
             qa_pairs = load_results(save_path) or {}
 
-            # Load CSV file and extract queries
             df = pd.read_csv(csv_file_path, header=None)
             queries = df[0].tolist()
             
-            if not qa_pairs:  # Only process if responses are not already saved
+            if not qa_pairs:  # only process if responses are not already saved
                 for i in range(0, len(queries), batch_size):
                     batch_queries = queries[i:i + batch_size]
                     prompts = [generate_prompt(query) for query in batch_queries]
@@ -110,7 +110,7 @@ def generate_responses(folder_path, save_dir, model, tokenizer, max_tokens=256, 
     print("Inference complete. Raw responses saved in:", save_dir)
 
 
-# Function to translate raw response files
+# Step 2: translate raw (multilingual) responses to English
 def translate_responses(input_folder, output_folder, translator):
     for filename in os.listdir(input_folder):
         if filename.endswith(".json"):
@@ -122,15 +122,15 @@ def translate_responses(input_folder, output_folder, translator):
             file_path = os.path.join(input_folder, filename)
             save_path = os.path.join(output_folder, f"{language_code}_{category_name}.json")
 
-            # Load raw responses
             data = load_results(file_path)
             translated_responses = {}
 
-            if not os.path.exists(save_path):  # Only process if translations are not already saved
+            if not os.path.exists(save_path):  # only process if translations are not already saved
                 for query, response in data.items():
-                    # Translate both query and response to English
+                    # translate query first
                     translated_query = translator.translate_to_english(query, target="en",save_dir=save_path)
 
+                    # extract and translate response
                     match = re.search(r'\nAssistant(.*)', response, re.IGNORECASE | re.DOTALL)
                     if match:
                         response = match.group(1).strip()
@@ -144,7 +144,8 @@ def translate_responses(input_folder, output_folder, translator):
     print("Translation complete. Translated responses saved in:", output_folder)
 
 
-def evaluate_responses_with_gpt(input_folder, output_folder, gpt_model, summary_save_path="eval_new.txt"):
+# Step 3: evaluate English responses with GPT-4o
+def evaluate_responses_with_gpt(input_folder, output_folder, gpt_model, summary_save_path="eval_dpo_4.txt"):
     with open(summary_save_path, "a", encoding="utf-8") as summary_file:
         for filename in os.listdir(input_folder):
             if filename.endswith(".json"):
@@ -173,16 +174,14 @@ def evaluate_responses_with_gpt(input_folder, output_folder, gpt_model, summary_
                 )
                 prompts.append(prompt)
 
-            # Check if the evaluated file already exists
+            # check if the evaluated file already exists
             save_path = os.path.join(output_folder, f"{language_code}_{category_name}_eval.json")
             if os.path.exists(save_path):
                 print(f"Evaluation for {language_code}_{category_name} already exists. Skipping...")
                 continue
 
-            # Perform GPT evaluation if results are not already saved
             scored_data = gpt_model.infer_batch(prompts, save_dir=save_path)
 
-            # Process and save individual results
             results = []
             for (b, g), score in zip(data.items(), scored_data):
 
@@ -198,16 +197,13 @@ def evaluate_responses_with_gpt(input_folder, output_folder, gpt_model, summary_
                 }
                 results.append(result)
 
-            # Calculate and print ASR for the category
+            # calculate ASR by category
             success_count = sum(result["ASR"] for result in results)
             asr = success_count / len(scored_data) if scored_data else 0
             print(f"{language_code}_{category_name}: ASR = {asr:.2f}")
 
-            # Save the ASR result incrementally to the summary file
-            summary_file.write(f"Language: {language_code}\n")
-            summary_file.write(f"  Category: {category_name}: ASR = {asr:.2f}\n\n")
+            summary_file.write(f"Language: {language_code} Category: {category_name}: ASR = {asr:.2f}\n")
 
-            # Save detailed results for each prompt-response pair
             json.dump(results, open(save_path, "w", encoding="utf-8"), indent=4)
 
     print(f"\nEvaluation summary saved to {summary_save_path}")
@@ -223,7 +219,6 @@ def main():
     parser.add_argument("--eval-metric", type=str, default="gpt", help="Evaluation metric to use (e.g., 'gpt').")
     cmd_args = parser.parse_args()
 
-    # Create directories for different stages of results
     raw_results_dir = os.path.join(cmd_args.save_dir, "raw_responses/")
     translated_dir = os.path.join(cmd_args.save_dir, "translated_responses/")
     eval_dir = os.path.join(cmd_args.save_dir, "eval_results/")
@@ -236,7 +231,7 @@ def main():
     translator = get_translator(cmd_args.translator)  
     gpt_model = get_metric(cmd_args.eval_metric)
 
-    # Run inference and save raw results
+    # run inference and save raw results
     generate_responses(
         folder_path=cmd_args.data_dir,
         save_dir=raw_results_dir,
@@ -245,14 +240,14 @@ def main():
         max_tokens=cmd_args.max_tokens,
     )
 
-    # Translate raw results and save translated results
+    # translate raw results and save translated results
     translate_responses(
         input_folder=raw_results_dir,
         output_folder=translated_dir,
         translator=translator,
     )
 
-    # Evaluate translated responses with GPT and save evaluations
+    # evaluate translated responses with GPT and save evaluations
     evaluate_responses_with_gpt(
         input_folder=translated_dir,
         output_folder=eval_dir,

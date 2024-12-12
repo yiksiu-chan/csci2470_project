@@ -1,4 +1,4 @@
-# Cache folders
+# cache folders
 __pycache__
 .ipynb_checkpoints
 .log
@@ -6,21 +6,16 @@ __pycache__
 wandb
 slurm
 
-# Virtual environment
+# virtual environment
 venv
 
-# Model checkpoints
+# model checkpoints
 checkpoints
-checkpoints_v2
-checkpoints_v3
-model_dpo_v2
-model_dpo_v3
+models
 
-# Data files
-data 
+# large data files
+data/safe_rlhf 
+data/xsafety_benchmark
 
-# Bash scripts
-.sh
-
-# Login credentials
+# login credentials
 google_credentials.json
