@@ -2,6 +2,7 @@
 
 This repository contains the official implementation of our final project titled Investigating the (In)Effectiveness of Multilingual Safety Alignment. It investigates the trade-offs between safety alignment and general capabilities in multilingual large language models (LLMs). It involves fine-tuning models using Direct Preference Optimization (DPO) and evaluating their performance across multiple languages and tasks.
 
+Link to repo: https://github.com/yiksiu-chan/csci2470_project
 ---
 
 ## Repository Structure
